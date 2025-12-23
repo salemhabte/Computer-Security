@@ -5,6 +5,7 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -30,6 +31,14 @@ var (
 	SMTPSERVER string
 	SMTPPORT   string
 	SMTPUSER   string
+
+	LOG_ENC_KEY string
+
+	MIN_PASSWORD_LENGTH   int
+	LOCKOUT_THRESHOLD     int
+	LOCKOUT_WINDOW_MIN    int
+	LOCKOUT_DURATION_MIN  int
+	BACKUP_PATH           string
 
 	CLIENT_ID           string
 	CLIENT_SECRET       string
@@ -62,6 +71,12 @@ func InitEnv() {
 	USER_OTP_COLLECTION_NAME = getEnv("USER_OTP_COLLECTION_NAME")
 	USER_REFRESH_TOKEN_COLLECTION_NAME = getEnv("USER_REFRESH_TOKEN_COLLECTION_NAME")
 	JWTREFRESHSECRET = getEnv("JWTREFRESHSECRET")
+	LOG_ENC_KEY = getEnv("LOG_ENC_KEY")
+	MIN_PASSWORD_LENGTH = getEnvInt("MIN_PASSWORD_LENGTH", 8)
+	LOCKOUT_THRESHOLD = getEnvInt("LOCKOUT_THRESHOLD", 5)
+	LOCKOUT_WINDOW_MIN = getEnvInt("LOCKOUT_WINDOW_MIN", 15)
+	LOCKOUT_DURATION_MIN = getEnvInt("LOCKOUT_DURATION_MIN", 15)
+	BACKUP_PATH = getEnv("BACKUP_PATH")
 	
 	// PORT = getEnv("PORT")
 }
@@ -72,4 +87,16 @@ func getEnv(key string) string {
 		log.Fatalf("Environment variable %s is not set", key)
 	}
 	return val
+}
+
+func getEnvInt(key string, def int) int {
+	val := os.Getenv(key)
+	if val == "" {
+		return def
+	}
+	parsed, err := strconv.Atoi(val)
+	if err != nil {
+		log.Fatalf("Environment variable %s must be int", key)
+	}
+	return parsed
 }

@@ -82,22 +82,29 @@ func (uc *UserController) RegistrationValidation(ctx *gin.Context) {
 
 func (uc *UserController) HandleLogin(ctx *gin.Context) {
 
-	var user *domain.UserDTO
-	if err := ctx.ShouldBindJSON(&user); err != nil {
+	var req struct {
+		Email   string `json:"email"`
+		Password string `json:"password"`
+		OTP     string `json:"otp"`
+		Captcha string `json:"captcha_token"`
+	}
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
 			"error": "Invalid request payload",
 		})
 		return
 	}
-	if user.Email == "" || user.Password == "" {
+	if req.Email == "" || req.Password == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
 		return
 	}
-	jwtToken, err := uc.UserUsecase.Login(user.Email, user.Password)
+	jwtToken, err := uc.UserUsecase.Login(req.Email, req.Password, req.OTP, req.Captcha)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+		if err.Error() == "mfa_required" {
+			ctx.JSON(http.StatusAccepted, gin.H{"message": "OTP sent to email. Provide otp to complete login."})
+			return
+		}
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	ctx.JSON(200, gin.H{"message": "User logged in successfully", "token": jwtToken})

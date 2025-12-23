@@ -37,4 +37,8 @@ type User struct {
 	TelegramHandle string
 	Password       string
 	Role           string
+	Department     string
+	EmploymentStatus string
+	DeviceTrust    string
+	BiometricVerified bool
 }

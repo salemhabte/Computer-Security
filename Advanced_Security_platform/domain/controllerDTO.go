@@ -35,6 +35,10 @@ type UserDTO struct {
 	TelegramHandle string             `json:"telegram_handle" bson:"telegram_handle"`
 	Password       string             `json:"password" bson:"password"` // securely hashed
 	Role           string             `json:"role" bson:"role"`         // values: "admin", "user", "super_admin"
+	Department     string             `json:"department" bson:"department"`
+	EmploymentStatus string           `json:"employment_status" bson:"employment_status"`
+	DeviceTrust    string             `json:"device_trust" bson:"device_trust"`
+	BiometricVerified bool            `json:"biometric_verified" bson:"biometric_verified"`
 }
 
 
@@ -46,5 +50,9 @@ type UpdateProfileDTO struct {
 	PhoneNum       string             `json:"phone_num" bson:"phone_num"` // validate format
 	TelegramHandle string             `json:"telegram_handle" bson:"telegram_handle"`
 	Password       string             `json:"password" bson:"password"` // securely hashed
+	Department     string             `json:"department" bson:"department"`
+	EmploymentStatus string           `json:"employment_status" bson:"employment_status"`
+	DeviceTrust    string             `json:"device_trust" bson:"device_trust"`
+	BiometricVerified bool            `json:"biometric_verified" bson:"biometric_verified"`
 }
 

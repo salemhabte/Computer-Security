@@ -3,11 +3,12 @@ package router
 import (
 	controller "security/Delivery/Controller"
 	"security/infrastructure"
+	domain "security/domain"
 
 	"github.com/gin-gonic/gin"
 )
 
-func Router(uc *controller.UserController, pc *controller.PasswordController, auth *infrastructure.AuthMiddleware,) {
+func Router(uc *controller.UserController, pc *controller.PasswordController, polc *controller.PolicyController, bc *controller.BackupController, auth *infrastructure.AuthMiddleware, policy domain.IPolicyService, audit domain.IAuditLogger,) {
 	router := gin.Default()
 
 	router.POST("/login", uc.HandleLogin)
@@ -22,6 +23,16 @@ func Router(uc *controller.UserController, pc *controller.PasswordController, au
 	{
 		userRoutes.POST("/logout", uc.HandleLogout)
 		userRoutes.PUT("/edit_profile", uc.UpdateProfile)
+	}
+
+	// Admin / policy routes
+	admin := router.Group("/admin")
+	admin.Use(auth.JWTAuthMiddleware(), infrastructure.RoleMiddleware("SUPER_ADMIN"))
+	{
+		admin.POST("/role", polc.UpsertRole)
+		admin.POST("/dac/grant", polc.GrantDAC)
+		admin.POST("/dac/revoke", polc.RevokeDAC)
+		admin.POST("/backup/run", bc.RunBackup)
 	}
 
 	router.GET("/auth/:provider", uc.SignInWithProvider)

@@ -78,6 +78,22 @@ func (r *UserRepository) GetUserByID(userID string) (*domain.UserDTO, error) {
 	}
 	return &user, nil
 }
+
+func (r *UserRepository) GetAttributesByEmail(email string) (*domain.AttributeSet, error) {
+	user, err := r.FindByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+	return &domain.AttributeSet{
+		Department:       user.Department,
+		EmploymentStatus: user.EmploymentStatus,
+		Location:         "", // can be enriched later
+		DeviceTrust:      user.DeviceTrust,
+		Role:             user.Role,
+		BiometricVerified: user.BiometricVerified,
+		Custom:           map[string]string{},
+	}, nil
+}
 func (r *UserRepository) CloseDataBase() error {
 	return r.Client.Disconnect(r.Contxt)
 }
@@ -123,6 +139,16 @@ func (repo *UserRepository) UpdateUserByEmail(email string, dto *domain.UpdatePr
 		}
 		updateFields["password"] = string(hashedPassword)
 	}
+	if dto.Department != "" {
+		updateFields["department"] = dto.Department
+	}
+	if dto.EmploymentStatus != "" {
+		updateFields["employment_status"] = dto.EmploymentStatus
+	}
+	if dto.DeviceTrust != "" {
+		updateFields["device_trust"] = dto.DeviceTrust
+	}
+	updateFields["biometric_verified"] = dto.BiometricVerified
 
 	update := bson.M{"$set": updateFields}
 

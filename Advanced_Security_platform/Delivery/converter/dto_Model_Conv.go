@@ -14,6 +14,10 @@ func ChangeToDTOUser(domainUser *domain.User) *domain.UserDTO {
 		TelegramHandle: domainUser.TelegramHandle,
 		Password:       domainUser.Password,
 		Role:           domainUser.Role,
+		Department:     domainUser.Department,
+		EmploymentStatus: domainUser.EmploymentStatus,
+		DeviceTrust:    domainUser.DeviceTrust,
+		BiometricVerified: domainUser.BiometricVerified,
 	}
 }
 func ChangeToDomainUser(udto *domain.UserDTO) *domain.User {
@@ -26,6 +30,10 @@ func ChangeToDomainUser(udto *domain.UserDTO) *domain.User {
 		TelegramHandle: udto.TelegramHandle,
 		Password:       udto.Password,
 		Role:           udto.Role,
+		Department:     udto.Department,
+		EmploymentStatus: udto.EmploymentStatus,
+		DeviceTrust:    udto.DeviceTrust,
+		BiometricVerified: udto.BiometricVerified,
 	}
 }
 

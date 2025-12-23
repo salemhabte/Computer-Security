@@ -2,6 +2,8 @@ package infrastructure
 
 import (
 	"regexp"
+	"fmt"
+	"security/config"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -26,7 +28,7 @@ func (p *PasswordService) IsStrongPassword(password string) bool {
 		special   = `[!@#~$%^&*()_+|<>?:{}]`
 	)
 
-	if len(password) < 8 {
+	if len(password) < config.MIN_PASSWORD_LENGTH {
 		return false
 	}
 	hasUpper := regexp.MustCompile(uppercase).MatchString(password)
@@ -47,4 +49,8 @@ func (p *PasswordService) Hashpassword(password string) string {
 func (p *PasswordService) ComparePassword(userPassword, password string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(userPassword), []byte(password))
 	return err
+}
+
+func (p *PasswordService) PasswordGuidance() string {
+	return fmt.Sprintf("Password must be >= %d chars with upper, lower, number, special.", config.MIN_PASSWORD_LENGTH)
 }
