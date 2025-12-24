@@ -69,16 +69,31 @@ curl -X POST http://localhost:8080/admin/role \
   -H "Content-Type: application/json" \
   -d '{"name":"HR_MANAGER","permissions":["approve_leave","document:read"]}'
 ```
-Grant DAC:
+
+## DAC Permissions (requires authentication - resource owner OR admin)
+Grant DAC (resource owners can grant permissions on their own resources, admins can grant on any resource):
 ```bash
-curl -X POST http://localhost:8080/admin/dac/grant \
-  -H "Authorization: Bearer <admin_access_token>" \
+curl -X POST http://localhost:8080/dac/grant \
+  -H "Authorization: Bearer <access_token>" \
   -H "Content-Type: application/json" \
-  -d '{"resource_id":"doc-123","subject":"user@example.com","actions":["document:read"]}'
+  -d '{"resource_id":"doc-123","subject":"user@example.com","actions":["document:read","document:write"]}'
+```
+
+Revoke DAC:
+```bash
+curl -X POST http://localhost:8080/dac/revoke \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"resource_id":"doc-123","subject":"user@example.com"}'
 ```
 Backup:
 ```bash
 curl -X POST http://localhost:8080/admin/backup/run \
   -H "Authorization: Bearer <admin_access_token>"
 ```
+
+**Note on DAC**: 
+- Resource owners (users who created/own the resource) can grant/revoke permissions on their own resources
+- Admins (SUPER_ADMIN/ADMIN) can grant/revoke permissions on any resource
+- The system checks resource ownership automatically via the resource repository
 

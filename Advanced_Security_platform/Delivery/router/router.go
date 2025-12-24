@@ -30,9 +30,15 @@ func Router(uc *controller.UserController, pc *controller.PasswordController, po
 	admin.Use(auth.JWTAuthMiddleware(), infrastructure.RoleMiddleware("SUPER_ADMIN"))
 	{
 		admin.POST("/role", polc.UpsertRole)
-		admin.POST("/dac/grant", polc.GrantDAC)
-		admin.POST("/dac/revoke", polc.RevokeDAC)
 		admin.POST("/backup/run", bc.RunBackup)
+	}
+
+	// DAC routes - owners OR admins can grant/revoke
+	dacRoutes := router.Group("/dac")
+	dacRoutes.Use(auth.JWTAuthMiddleware())
+	{
+		dacRoutes.POST("/grant", polc.GrantDAC)
+		dacRoutes.POST("/revoke", polc.RevokeDAC)
 	}
 
 	router.GET("/auth/:provider", uc.SignInWithProvider)

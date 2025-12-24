@@ -33,6 +33,7 @@ func main() {
 	otpService := repositories.NewUserOTPRepository()
 	roleRepo := repositories.NewRoleRepository()
 	aclRepo := repositories.NewACLRepository()
+	resourceRepo := repositories.NewResourceRepository()
 
 	// Initialize Services
 	passwaordService := infrastructure.NewPasswordService()
@@ -52,7 +53,7 @@ func main() {
 	// Initialize DataBase Repository
 	userController := controller.NewUserController(userUsecase, oauthUsecase)
 	passwordController := controller.NewPasswordController(passwordUsecase)
-	policyController := controller.NewPolicyController(roleRepo, aclRepo)
+	policyController := controller.NewPolicyController(roleRepo, aclRepo, resourceRepo)
 	backupController := controller.NewBackupController(backupService)
 	
 

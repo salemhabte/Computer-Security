@@ -87,6 +87,10 @@ type IACLRepository interface {
 	Get(resourceID, subject string) (*AccessControlEntry, error)
 }
 
+type IResourceRepository interface {
+	GetByID(resourceID string) (*Resource, error)
+}
+
 type IPolicyService interface {
 	Decide(user *UserDTO, attrs *AttributeSet, resource *Resource, action string, ctx RequestContext) PolicyDecision
 }
