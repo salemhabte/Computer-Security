@@ -1,11 +1,11 @@
 package repository
 
 import (
-	domain "security/domain"
-	"security/config"
 	"context"
-	"log"
 	"errors"
+	"log"
+	"security/config"
+	domain "security/domain"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -43,3 +43,35 @@ func (r *ResourceRepository) GetByID(resourceID string) (*domain.Resource, error
 	return &resource, nil
 }
 
+func (r *ResourceRepository) Create(resource *domain.Resource) error {
+	_, err := r.coll.InsertOne(r.ctx, resource)
+	return err
+}
+
+func (r *ResourceRepository) GetByOwner(ownerEmail string) ([]*domain.Resource, error) {
+	cursor, err := r.coll.Find(r.ctx, bson.M{"owneremail": ownerEmail})
+	if err != nil {
+		return nil, err
+	}
+	var resources []*domain.Resource
+	if err = cursor.All(r.ctx, &resources); err != nil {
+		return nil, err
+	}
+	return resources, nil
+}
+
+func (r *ResourceRepository) GetByIDs(ids []string) ([]*domain.Resource, error) {
+	if len(ids) == 0 {
+		return []*domain.Resource{}, nil
+	}
+	filter := bson.M{"id": bson.M{"$in": ids}}
+	cursor, err := r.coll.Find(r.ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	var resources []*domain.Resource
+	if err = cursor.All(r.ctx, &resources); err != nil {
+		return nil, err
+	}
+	return resources, nil
+}

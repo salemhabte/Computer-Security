@@ -3,6 +3,7 @@ package domain
 import (
 	"net/http"
 	"time"
+
 	"github.com/dgrijalva/jwt-go"
 )
 
@@ -14,6 +15,7 @@ type IUserUseCase interface {
 	Refresh(oldRefreshToken string) (*AuthTokens, error)
 	Logout(refreshToken string) error
 	UpdateProfile(email string, dto *UpdateProfileDTO) (*UserDTO, error)
+	ChangePassword(email, oldPassword, newPassword string) error
 	GetUserByEmail(email string) (*UserDTO, error)
 	GetAttributes(email string) (*AttributeSet, error)
 }
@@ -26,7 +28,7 @@ type IAuthService interface {
 }
 type IUserValidation interface {
 	IsValidEmail(email string) bool
-	IsStrongPassword(password string) bool
+	IsStrongPassword(password string) error
 	Hashpassword(password string) string
 	ComparePassword(userPassword, password string) error
 	PasswordGuidance() string
@@ -85,10 +87,15 @@ type IACLRepository interface {
 	Grant(entry AccessControlEntry) error
 	Revoke(resourceID, subject string) error
 	Get(resourceID, subject string) (*AccessControlEntry, error)
+	GetBySubject(subject string) ([]*AccessControlEntry, error)
+	GetByResourceID(resourceID string) ([]*AccessControlEntry, error)
 }
 
 type IResourceRepository interface {
 	GetByID(resourceID string) (*Resource, error)
+	Create(resource *Resource) error
+	GetByOwner(ownerEmail string) ([]*Resource, error)
+	GetByIDs(ids []string) ([]*Resource, error)
 }
 
 type IPolicyService interface {

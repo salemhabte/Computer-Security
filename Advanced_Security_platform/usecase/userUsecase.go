@@ -1,12 +1,12 @@
 package usecase
 
 import (
-	domain "security/domain"
 	"errors"
 	"fmt"
+	"security/config"
+	domain "security/domain"
 	"sync"
 	"time"
-	"security/config"
 )
 
 type UserUsecase struct {
@@ -18,10 +18,10 @@ type UserUsecase struct {
 	authRepo      domain.IAuthRepo
 	captcha       domain.ICaptchaValidator
 
-	mu            sync.Mutex
-	failedLogins  map[string][]time.Time
-	lockedUntil   map[string]time.Time
-	mfaPending    map[string]mfaEntry
+	mu           sync.Mutex
+	failedLogins map[string][]time.Time
+	lockedUntil  map[string]time.Time
+	mfaPending   map[string]mfaEntry
 }
 
 type mfaEntry struct {
@@ -51,11 +51,12 @@ func (uc *UserUsecase) HandleRegistration(user *domain.User) error {
 		return errors.New("user already exists")
 	}
 
-	isvaild_email := uc.userVaildate.IsValidEmail(user.Email)
-	ispassword_strong := uc.userVaildate.IsStrongPassword(user.Password)
+	if !uc.userVaildate.IsValidEmail(user.Email) {
+		return errors.New("invalid email format")
+	}
 
-	if !ispassword_strong || !isvaild_email {
-		return errors.New("invalid password or email")
+	if err := uc.userVaildate.IsStrongPassword(user.Password); err != nil {
+		return err
 	}
 
 	hashpassword := uc.userVaildate.Hashpassword(user.Password)
@@ -288,6 +289,7 @@ func (a *UserUsecase) isLocked(email string) bool {
 func (a *UserUsecase) storeMFA(email, otp string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+	fmt.Printf("DEBUG MFA STORE: Email='%s' OTP='%s' Time=%v\n", email, otp, time.Now())
 	a.mfaPending[email] = mfaEntry{otp: otp, expires: time.Now().Add(5 * time.Minute)}
 }
 
@@ -295,6 +297,8 @@ func (a *UserUsecase) validateMFA(email, otp string) bool {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	entry, ok := a.mfaPending[email]
+	fmt.Printf("DEBUG MFA VALIDATE: Email='%s' InputOTP='%s' Found=%v StoredOTP='%s' Expires=%v Now=%v\n", email, otp, ok, entry.otp, entry.expires, time.Now())
+
 	if !ok || time.Now().After(entry.expires) {
 		return false
 	}
@@ -305,4 +309,23 @@ func (a *UserUsecase) clearMFA(email string) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	delete(a.mfaPending, email)
+}
+
+func (uc *UserUsecase) ChangePassword(email, oldPassword, newPassword string) error {
+	user, err := uc.userinterface.FindByEmail(email)
+	if err != nil {
+		return errors.New("user not found")
+	}
+
+	if err := uc.userVaildate.ComparePassword(user.Password, oldPassword); err != nil {
+		return errors.New("incorrect old password")
+	}
+
+	if err := uc.userVaildate.IsStrongPassword(newPassword); err != nil {
+		return err
+	}
+
+	hashed := uc.userVaildate.Hashpassword(newPassword)
+
+	return uc.userinterface.UpdatePassword(user.UserID.Hex(), hashed)
 }

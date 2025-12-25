@@ -11,8 +11,8 @@ const (
 )
 
 type AuthTokens struct {
-	AccessToken  string
-	RefreshToken string
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 type RefreshToken struct {
 	UserID    string
@@ -29,16 +29,16 @@ type UserUnverified struct {
 }
 
 type User struct {
-	UserName       string
-	PersonalBio    string
-	ProfilePic     string
-	Email          string
-	PhoneNum       string
-	TelegramHandle string
-	Password       string
-	Role           string
-	Department     string
-	EmploymentStatus string
-	DeviceTrust    string
+	UserName          string
+	PersonalBio       string
+	ProfilePic        string
+	Email             string
+	PhoneNum          string
+	TelegramHandle    string
+	Password          string
+	Role              string
+	Department        string
+	EmploymentStatus  string
+	DeviceTrust       string
 	BiometricVerified bool
 }

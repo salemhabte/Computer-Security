@@ -1,8 +1,9 @@
 package infrastructure
 
 import (
-	"regexp"
+	"errors"
 	"fmt"
+	"regexp"
 	"security/config"
 
 	"golang.org/x/crypto/bcrypt"
@@ -20,7 +21,7 @@ func (p *PasswordService) IsValidEmail(email string) bool {
 	re := regexp.MustCompile(regex)
 	return re.MatchString(email)
 }
-func (p *PasswordService) IsStrongPassword(password string) bool {
+func (p *PasswordService) IsStrongPassword(password string) error {
 	var (
 		uppercase = `[A-Z]`
 		lowercase = `[a-z]`
@@ -29,14 +30,22 @@ func (p *PasswordService) IsStrongPassword(password string) bool {
 	)
 
 	if len(password) < config.MIN_PASSWORD_LENGTH {
-		return false
+		return fmt.Errorf("password must be at least %d characters long", config.MIN_PASSWORD_LENGTH)
 	}
-	hasUpper := regexp.MustCompile(uppercase).MatchString(password)
-	hasLower := regexp.MustCompile(lowercase).MatchString(password)
-	hasNumber := regexp.MustCompile(number).MatchString(password)
-	hasSpecial := regexp.MustCompile(special).MatchString(password)
+	if !regexp.MustCompile(uppercase).MatchString(password) {
+		return errors.New("password must contain at least one uppercase letter (A-Z)")
+	}
+	if !regexp.MustCompile(lowercase).MatchString(password) {
+		return errors.New("password must contain at least one lowercase letter (a-z)")
+	}
+	if !regexp.MustCompile(number).MatchString(password) {
+		return errors.New("password must contain at least one number (0-9)")
+	}
+	if !regexp.MustCompile(special).MatchString(password) {
+		return errors.New("password must contain at least one special character (!@#~$%^&*()_+|<>?:{})")
+	}
 
-	return hasUpper && hasLower && hasNumber && hasSpecial
+	return nil
 }
 
 func (p *PasswordService) Hashpassword(password string) string {

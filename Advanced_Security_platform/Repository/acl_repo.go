@@ -1,10 +1,10 @@
 package repository
 
 import (
-	domain "security/domain"
-	"security/config"
 	"context"
 	"log"
+	"security/config"
+	domain "security/domain"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -54,3 +54,26 @@ func (r *ACLRepository) Get(resourceID, subject string) (*domain.AccessControlEn
 	return &entry, err
 }
 
+func (r *ACLRepository) GetBySubject(subject string) ([]*domain.AccessControlEntry, error) {
+	cursor, err := r.coll.Find(r.ctx, bson.M{"subject": subject})
+	if err != nil {
+		return nil, err
+	}
+	var acls []*domain.AccessControlEntry
+	if err = cursor.All(r.ctx, &acls); err != nil {
+		return nil, err
+	}
+	return acls, nil
+}
+
+func (r *ACLRepository) GetByResourceID(resourceID string) ([]*domain.AccessControlEntry, error) {
+	cursor, err := r.coll.Find(r.ctx, bson.M{"resourceid": resourceID})
+	if err != nil {
+		return nil, err
+	}
+	var acls []*domain.AccessControlEntry
+	if err = cursor.All(r.ctx, &acls); err != nil {
+		return nil, err
+	}
+	return acls, nil
+}

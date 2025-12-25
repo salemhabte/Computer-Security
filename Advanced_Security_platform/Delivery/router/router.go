@@ -2,14 +2,15 @@ package router
 
 import (
 	controller "security/Delivery/Controller"
-	"security/infrastructure"
 	domain "security/domain"
+	"security/infrastructure"
 
 	"github.com/gin-gonic/gin"
 )
 
-func Router(uc *controller.UserController, pc *controller.PasswordController, polc *controller.PolicyController, bc *controller.BackupController, auth *infrastructure.AuthMiddleware, policy domain.IPolicyService, audit domain.IAuditLogger,) {
+func Router(uc *controller.UserController, pc *controller.PasswordController, polc *controller.PolicyController, bc *controller.BackupController, auth *infrastructure.AuthMiddleware, policy domain.IPolicyService, audit domain.IAuditLogger) {
 	router := gin.Default()
+	router.Use(CORSMiddleware())
 
 	router.POST("/login", uc.HandleLogin)
 	router.POST("/refresh", uc.HandleRefresh)
@@ -23,6 +24,7 @@ func Router(uc *controller.UserController, pc *controller.PasswordController, po
 	{
 		userRoutes.POST("/logout", uc.HandleLogout)
 		userRoutes.PUT("/edit_profile", uc.UpdateProfile)
+		userRoutes.POST("/change_password", uc.HandleChangePassword)
 	}
 
 	// Admin / policy routes
@@ -39,6 +41,9 @@ func Router(uc *controller.UserController, pc *controller.PasswordController, po
 	{
 		dacRoutes.POST("/grant", polc.GrantDAC)
 		dacRoutes.POST("/revoke", polc.RevokeDAC)
+		dacRoutes.POST("/resources", polc.CreateResource)
+		dacRoutes.GET("/resources", polc.ListMyResources)
+		dacRoutes.GET("/permissions/:id", polc.GetResourcePermissions)
 	}
 
 	router.GET("/auth/:provider", uc.SignInWithProvider)

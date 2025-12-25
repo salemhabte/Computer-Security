@@ -5,15 +5,17 @@ import (
 	"net/http"
 	"security/domain"
 
-	"security/Delivery/converter"
+	conv "security/Delivery/converter"
 
 	"github.com/gin-gonic/gin"
 	"github.com/markbates/goth/gothic"
 )
+
 type UserController struct {
 	UserUsecase  domain.IUserUseCase
 	OauthUsecase domain.IOAuthUsecase
 }
+
 func NewUserController(uuc domain.IUserUseCase, oat domain.IOAuthUsecase) *UserController {
 	return &UserController{
 		UserUsecase:  uuc,
@@ -35,7 +37,7 @@ func (uc *UserController) Registration(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": "invalid request payload"})
 		return
 	}
-	
+
 	err := uc.UserUsecase.HandleRegistration(conv.ChangeToDomainUser(user))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{
@@ -83,10 +85,10 @@ func (uc *UserController) RegistrationValidation(ctx *gin.Context) {
 func (uc *UserController) HandleLogin(ctx *gin.Context) {
 
 	var req struct {
-		Email   string `json:"email"`
+		Email    string `json:"email"`
 		Password string `json:"password"`
-		OTP     string `json:"otp"`
-		Captcha string `json:"captcha_token"`
+		OTP      string `json:"otp"`
+		Captcha  string `json:"captcha_token"`
 	}
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusNotFound, gin.H{
@@ -143,7 +145,6 @@ func (h *UserController) HandleLogout(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "logged out successfully"})
 }
-
 
 func (uc *UserController) SignInWithProvider(c *gin.Context) {
 
@@ -231,4 +232,31 @@ func (uc *UserController) UpdateProfile(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, gin.H{"message": "Profile updated", "user": updatedUser})
+}
+
+func (uc *UserController) HandleChangePassword(ctx *gin.Context) {
+	var req struct {
+		OldPassword string `json:"old_password" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	emailVal, exists := ctx.Get("email")
+	if !exists {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	email := emailVal.(string)
+
+	err := uc.UserUsecase.ChangePassword(email, req.OldPassword, req.NewPassword)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"message": "Password changed successfully"})
 }
